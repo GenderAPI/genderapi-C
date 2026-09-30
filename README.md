@@ -326,7 +326,8 @@ dotnet pack -c Release # writes src/GenderApi/bin/Release/GenderAPI.2.0.0.nupkg
 ```
 
 Releases are published to NuGet by `.github/workflows/publish.yml` when a `v*` tag is pushed. The
-workflow needs the repository secret `NUGET_API_KEY` (a nuget.org API key scoped to push `GenderAPI`).
+workflow authenticates through nuget.org trusted publishing (OIDC) for this repository, workflow and the
+`nuget` environment, so no long-lived API key is stored.
 
 ## License
 

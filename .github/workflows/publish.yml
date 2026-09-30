@@ -1,7 +1,8 @@
 name: Publish to NuGet
 
 # Pushing a tag such as v2.0.0 builds, tests and publishes the GenderAPI package.
-# Required repository secret: NUGET_API_KEY (nuget.org API key allowed to push "GenderAPI").
+# Authenticates through the nuget.org trusted publishing policy for GenderAPI/genderapi-C
+# (publish.yml, environment "nuget"); no long-lived API key is stored.
 
 on:
   push:
@@ -9,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -34,7 +36,10 @@ jobs:
         run: dotnet test --no-build -c Release
       - name: Pack
         run: dotnet pack src/GenderApi/GenderApi.csproj --no-build -c Release -o artifacts
+      - name: NuGet login (trusted publishing)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: genderapi
       - name: Push to nuget.org
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
