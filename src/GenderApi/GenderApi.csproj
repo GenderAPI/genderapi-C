@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
+    <RootNamespace>GenderApi</RootNamespace>
+    <AssemblyName>GenderApi</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <PackageId>GenderAPI</PackageId>
+    <Version>2.0.0</Version>
+    <Authors>GenderAPI.io</Authors>
+    <Company>GenderAPI.io</Company>
+    <Product>GenderAPI.io V2 client</Product>
+    <Description>Official GenderAPI.io V2 client for C#/.NET. Infers gender from names, email addresses and usernames, and validates phone numbers, using the GenderAPI.io V2 HTTP API. Results are inferences and can be unknown. Server-side use only.</Description>
+    <PackageTags>genderapi;gender;name;email;username;api-client;sdk</PackageTags>
+    <PackageProjectUrl>https://www.genderapi.io/api-documentation</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/GenderAPI/genderapi-C</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>Copyright (c) 2025 Gender Api</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>2.0.0 (breaking): new client for the GenderAPI.io V2 API. See CHANGELOG.md: https://github.com/GenderAPI/genderapi-C/blob/v2/CHANGELOG.md. Issues: https://github.com/GenderAPI/genderapi-C/issues</PackageReleaseNotes>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <InternalsVisibleTo Include="GenderApi.Tests" />
+  </ItemGroup>
+
+</Project>
