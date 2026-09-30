@@ -47,6 +47,8 @@ namespace GenderApi
 
     internal interface IApiResponse
     {
+        Meta? Meta { get; }
+
         void SetTransport(int statusCode, string rawJson, string? requestIdHeader);
     }
 

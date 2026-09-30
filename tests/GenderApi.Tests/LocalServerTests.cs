@@ -102,7 +102,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Default_handler_returns_parsed_response()
         {
-            using var server = new LocalServer(ctx => WriteJson(ctx, 200, Fixtures.Example("/api/v2/gender", "post", "200", "dataset")));
+            using var server = new LocalServer(ctx => WriteJson(ctx, 200, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset")));
             using var client = new GenderApiClient(new GenderApiClientOptions { ApiKey = ClientFactory.TestKey, BaseUrl = server.BaseUrl });
 
             GenderResponse res = await client.NameAsync("Onur");
@@ -125,7 +125,7 @@ namespace GenderApi.Tests
                     return Task.CompletedTask;
                 }
 
-                return WriteJson(ctx, 200, Fixtures.Example("/api/v2/gender", "post", "200", "dataset"));
+                return WriteJson(ctx, 200, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"));
             });
             using var client = new GenderApiClient(new GenderApiClientOptions { ApiKey = ClientFactory.TestKey, BaseUrl = server.BaseUrl });
 

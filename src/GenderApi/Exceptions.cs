@@ -97,6 +97,43 @@ namespace GenderApi
         public Uri? Location { get; internal set; }
     }
 
+    /// <summary>
+    /// An API key was configured but the successful (2xx) response reports another access mode in
+    /// <c>meta.access.mode</c> (usually <c>ip_trial</c> because the key was not recognized). The request
+    /// has already been processed and trial credits may have been used; <see cref="Result"/> holds the
+    /// complete typed response the method would have returned, including billing metadata. Disable with
+    /// <see cref="GenderApiClientOptions.RequireApiKeyAccess"/>. <see cref="GenderApiException.Code"/> is
+    /// <c>unexpected_access_mode</c>.
+    /// </summary>
+    public sealed class GenderApiAccessModeException : GenderApiException
+    {
+        /// <summary>The error code carried by this exception.</summary>
+        public const string ErrorCode = "unexpected_access_mode";
+
+        /// <summary>Creates an exception.</summary>
+        public GenderApiAccessModeException(string message, object result, string? accessMode, string? accessReason)
+            : base(message)
+        {
+            Result = result ?? throw new ArgumentNullException(nameof(result));
+            AccessMode = accessMode;
+            AccessReason = accessReason;
+            Code = ErrorCode;
+        }
+
+        /// <summary><c>meta.access.mode</c> reported by the server (for example <c>ip_trial</c>).</summary>
+        public string? AccessMode { get; }
+
+        /// <summary><c>meta.access.reason</c> reported by the server (for example <c>api_key_invalid</c>), when present.</summary>
+        public string? AccessReason { get; }
+
+        /// <summary>
+        /// The complete typed response the method would have returned (<see cref="GenderResponse"/>,
+        /// <see cref="BatchResponse"/>, <see cref="UsageResponse"/> or <see cref="PhoneValidationResponse"/>).
+        /// The raw JSON is also available as <see cref="GenderApiException.RawBody"/>.
+        /// </summary>
+        public object Result { get; }
+    }
+
     /// <summary>Invalid input detected on the client. No network request was made.</summary>
     public sealed class GenderApiValidationException : ArgumentException
     {

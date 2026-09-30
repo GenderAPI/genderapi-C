@@ -40,6 +40,7 @@ namespace GenderApi
         private readonly Uri _baseUrl;
         private readonly TimeSpan _timeout;
         private readonly string _userAgent;
+        private readonly bool _requireApiKeyAccess;
         private int _disposed;
 
         /// <summary>Creates a client that reads the key from <c>GENDERAPI_API_KEY</c> (or sends none).</summary>
@@ -84,6 +85,7 @@ namespace GenderApi
             }
 
             _userAgent = ua;
+            _requireApiKeyAccess = options.RequireApiKeyAccess;
 
             if (options.HttpClient != null)
             {
@@ -276,9 +278,41 @@ namespace GenderApi
             if (result is IApiResponse target)
             {
                 target.SetTransport(raw.StatusCode, raw.Body, raw.RequestIdHeader);
+                if (authenticate)
+                {
+                    CheckAccessMode(target, result, raw);
+                }
             }
 
             return result;
+        }
+
+        private void CheckAccessMode(IApiResponse response, object result, RawResponse raw)
+        {
+            if (_apiKey == null || !_requireApiKeyAccess)
+            {
+                return;
+            }
+
+            Access? access = response.Meta?.Access;
+            string? mode = access?.Mode;
+            if (mode == null || mode == "api_key")
+            {
+                return;
+            }
+
+            throw new GenderApiAccessModeException(
+                "Expected API-key access but the response reports access mode " + JsonSerializer.Serialize(mode)
+                    + ". Check your API key; this request may have consumed IP-trial credits.",
+                result,
+                mode,
+                access!.Reason)
+            {
+                StatusCode = raw.StatusCode,
+                RequestId = FirstNonEmpty(response.Meta?.RequestId, raw.RequestIdHeader),
+                Meta = response.Meta,
+                RawBody = raw.Body,
+            };
         }
 
         private async Task<RawResponse> SendRawAsync(HttpMethod method, string path, byte[]? body, bool authenticate, CancellationToken cancellationToken)

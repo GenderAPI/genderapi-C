@@ -102,6 +102,18 @@ namespace GenderApi.Tests
             throw new InvalidOperationException($"No example {name} for {method} {path} {status}");
         }
 
+        /// <summary>
+        /// The example with <c>meta.access</c> rewritten to API-key access, as the server reports it when the
+        /// configured key is recognized. The published examples use <c>ip_trial</c>, which a keyed client
+        /// rejects with <see cref="GenderApiAccessModeException"/> by default.
+        /// </summary>
+        public static string KeyedExample(string path, string method, string status, string name)
+        {
+            JsonNode node = JsonNode.Parse(Example(path, method, status, name))!;
+            node["meta"]!["access"] = new JsonObject { ["mode"] = "api_key", ["reason"] = null };
+            return node.ToJsonString();
+        }
+
         public static string WithExtraFields(string json)
         {
             JsonNode node = JsonNode.Parse(json)!;
@@ -124,7 +136,7 @@ namespace GenderApi.Tests
     {
         public const string TestKey = "0123456789abcdef01234567";
 
-        public static GenderApiClient Create(StubHandler handler, string? apiKey = TestKey, TimeSpan? timeout = null, string baseUrl = "https://api.genderapi.io/api/v2")
+        public static GenderApiClient Create(StubHandler handler, string? apiKey = TestKey, TimeSpan? timeout = null, string baseUrl = "https://api.genderapi.io/api/v2", bool requireApiKeyAccess = true)
         {
             return new GenderApiClient(new GenderApiClientOptions
             {
@@ -132,6 +144,7 @@ namespace GenderApi.Tests
                 BaseUrl = baseUrl,
                 HttpClient = new HttpClient(handler) { Timeout = System.Threading.Timeout.InfiniteTimeSpan },
                 Timeout = timeout ?? GenderApiClientOptions.DefaultTimeout,
+                RequireApiKeyAccess = requireApiKeyAccess,
             });
         }
     }

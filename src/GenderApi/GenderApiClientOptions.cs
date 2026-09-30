@@ -40,6 +40,15 @@ namespace GenderApi
         /// </summary>
         public HttpClient? HttpClient { get; set; }
 
+        /// <summary>
+        /// When true (the default) and an API key is configured, a successful response whose
+        /// <c>meta.access.mode</c> is present and is not <c>api_key</c> (for example <c>ip_trial</c> because the
+        /// key was not recognized) raises <see cref="GenderApiAccessModeException"/> instead of returning.
+        /// The request has already been processed at that point. Has no effect when no key is configured,
+        /// and never applies to <c>CapabilitiesAsync</c> or <c>ErrorCatalogAsync</c>.
+        /// </summary>
+        public bool RequireApiKeyAccess { get; set; } = true;
+
         /// <summary>Optional suffix appended to the <c>User-Agent</c> (for example <c>"my-app/1.2"</c>).</summary>
         public string? UserAgentSuffix { get; set; }
     }

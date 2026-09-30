@@ -9,7 +9,9 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 - First published release of the C#/.NET client, built for the GenderAPI.io **V2** API
   (`https://api.genderapi.io/api/v2`). It does not speak the V1 API; see "Migrating from 1.x" in
-  the README. V1 is in maintenance; the `v1` branch is kept for layout consistency.
+  the README. There is no 1.x package; V1 users can keep calling the V1 HTTP API directly
+  (V1 documentation: https://www.genderapi.io/api-documentation/v1). V1 stays available, with no
+  deprecation or shutdown planned. The `v1` branch is kept for layout consistency.
 
 ### Added
 
@@ -29,4 +31,9 @@ This project follows [Semantic Versioning](https://semver.org/).
   (plain HTTP only for localhost test servers), Bearer authentication only, no request at
   construction, optional injected `HttpClient`.
 - Works without an API key (the server may apply its shared IP trial).
+- `GenderApiClientOptions.RequireApiKeyAccess` (default `true`, only effective when a key is
+  configured): a successful response reporting a `meta.access.mode` other than `api_key` (for
+  example `ip_trial`) throws `GenderApiAccessModeException` (code `unexpected_access_mode`) with
+  `AccessMode`, `AccessReason`, the full typed `Result`, status and request id. The request has
+  already been processed; it is not retried. Not applied to `CapabilitiesAsync` or `ErrorCatalogAsync`.
 - Targets `net8.0` and `netstandard2.0`.

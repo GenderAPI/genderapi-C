@@ -216,7 +216,7 @@ namespace GenderApi.Tests
         {
             var stub = new StubHandler().Enqueue((req, ct) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent(Fixtures.Example("/api/v2/gender", "post", "200", "dataset"), Encoding.UTF8, "application/json"),
+                Content = new StringContent(Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"), Encoding.UTF8, "application/json"),
                 RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://elsewhere.example/api/v2/gender"),
             }));
             using var client = ClientFactory.Create(stub);
@@ -308,7 +308,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Value_of_254_characters_is_accepted()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "unknown"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "unknown"));
             using var client = ClientFactory.Create(stub);
             await client.NameAsync(new string('a', 254));
             Assert.Equal(1, stub.CallCount);
@@ -364,7 +364,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Batch_of_50_items_is_accepted()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender/batch", "post", "200", "batch"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender/batch", "post", "200", "batch"));
             using var client = ClientFactory.Create(stub);
             await client.GenderBatchAsync(Enumerable.Range(0, 50).Select(i => GenderRequest.ForName("n" + i, id: "id" + i)));
             Assert.Equal(1, stub.CallCount);

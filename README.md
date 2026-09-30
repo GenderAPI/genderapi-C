@@ -12,9 +12,11 @@ addresses and usernames, and validates phone numbers, through the
 Results are inferences, not facts about a person, and they can be `unknown`
 (`gender: null`). They never verify anyone's identity.
 
-> **1.x / V1:** there is no published 1.x release of this package. The `v1` branch is kept
-> for layout consistency with the other GenderAPI.io SDKs, and V1 is in maintenance.
-> New integrations should use this 2.x client and the V2 API.
+> **1.x / V1:** there is no 1.x package of this client. V1 users can keep calling the V1 HTTP API
+> directly ([V1 documentation](https://www.genderapi.io/api-documentation/v1)); V1 stays available,
+> with no deprecation or shutdown planned. The `v1` branch is kept for layout consistency with the
+> other GenderAPI.io SDKs (it contains no V1 client). New integrations should use this 2.x client
+> and the V2 API.
 
 ## Install
 
@@ -98,6 +100,7 @@ var client = new GenderApiClient(new GenderApiClientOptions
     Timeout = TimeSpan.FromSeconds(10),                                 // default 10 s
     HttpClient = myHttpClient,                                          // optional; not disposed by the client
     UserAgentSuffix = "my-app/1.0",                                     // optional
+    RequireApiKeyAccess = true,                                         // default; see below
     // BaseUrl = "https://api.genderapi.io/api/v2",                     // default; HTTPS only
 });
 ```
@@ -109,6 +112,7 @@ var client = new GenderApiClient(new GenderApiClientOptions
 | `HttpClient` | client-owned, redirects disabled | configure your handler with `AllowAutoRedirect = false`; the client rejects redirected responses anyway |
 | `BaseUrl` | `https://api.genderapi.io/api/v2` | must be HTTPS; plain HTTP is accepted only for `localhost`, `127.0.0.1` and `[::1]` (local test servers) |
 | `UserAgentSuffix` | none | appended to `genderapi-dotnet/2.0.0` |
+| `RequireApiKeyAccess` | `true` | only effective when a key is configured: a successful response whose `meta.access.mode` is present and is not `api_key` (for example `ip_trial` because the key was not recognized) throws `GenderApiAccessModeException`. Set to `false` to return such responses normally. Never applies to `CapabilitiesAsync()` or `ErrorCatalogAsync()` |
 
 With `IHttpClientFactory`:
 
@@ -185,8 +189,18 @@ failed items.
 | `GenderApiTransportException` (a `GenderApiException`) | no usable response (network failure, non-JSON or invalid JSON body); billing outcome unknown |
 | `GenderApiTimeoutException` (a `GenderApiTransportException`) | the configured timeout elapsed; billing outcome unknown |
 | `GenderApiRedirectException` (a `GenderApiException`) | the server answered 3xx; redirects are never followed |
+| `GenderApiAccessModeException` (a `GenderApiException`) | a key is configured (and `RequireApiKeyAccess` is on) but a 2xx response reports another `meta.access.mode`, usually `ip_trial` |
 
 Caller cancellation through the `CancellationToken` surfaces as `OperationCanceledException`.
+
+`GenderApiAccessModeException` (`Code` = `unexpected_access_mode`) is raised after the request has
+already been processed, so trial credits may have been used. It is not retried. `Result` holds the
+complete typed response the method would have returned (`GenderResponse`, `BatchResponse`,
+`UsageResponse` or `PhoneValidationResponse`, typed as `object`), `AccessMode` and `AccessReason`
+hold `meta.access.mode` / `meta.access.reason`, and `StatusCode`, `RequestId`, `Meta`,
+`BillingStatus` and `RawBody` (the raw JSON) are set as on other errors. The key is never included
+in the message. Check the configured key, or set `RequireApiKeyAccess = false` to accept trial
+responses.
 
 `GenderApiException` exposes `StatusCode`, `Code` (stable machine code), `Title`, `Detail`,
 `Action`, `Errors` (validation pointers), `RequestId` (from the body, `meta.request_id` or the
@@ -203,6 +217,11 @@ try
 catch (GenderApiValidationException ex)
 {
     // Fix the input; nothing was sent.
+}
+catch (GenderApiAccessModeException ex)
+{
+    // Processed under ex.AccessMode (e.g. ip_trial); the result is in ex.Result. Check the API key.
+    var res = (GenderResponse)ex.Result;
 }
 catch (GenderApiException ex) when (ex.StatusCode == 429)
 {
@@ -249,6 +268,10 @@ hours) and reports it in `Meta.Access.Mode == "ip_trial"` and `Meta.Usage.Resets
 no trial logic of its own; the server decides. A missing or unknown key can fall back to the trial,
 while disabled, expired or restricted keys do not.
 
+When a key **is** configured, a response reporting `ip_trial` means the key was not used; by default
+the client throws `GenderApiAccessModeException` (the request was processed and may have used trial
+credits; the full result is in `Result`). Set `RequireApiKeyAccess = false` to accept it instead.
+
 ## Server-side only
 
 Use this package on servers, workers and back-end jobs. Do not ship the API key in browser (Blazor
@@ -257,6 +280,10 @@ those clients instead. Response bodies (`RawJson`, `RawBody`) can contain the pe
 submitted; do not log them wholesale.
 
 ## Migrating from 1.x (V1)
+
+There is no 1.x package of this client. V1 users can keep calling the V1 HTTP API directly
+([V1 documentation](https://www.genderapi.io/api-documentation/v1)); V1 stays available, with no
+deprecation or shutdown planned.
 
 The 2.0.0 package is a new client for the V2 API; changing the base URL alone does not migrate a V1
 integration. The same API key and credit balance work with V2.

@@ -17,8 +17,9 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Single_dataset_result_is_parsed()
         {
+            // The published example reports ip_trial/api_key_missing, i.e. a request sent without a key.
             var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example(Gender, "post", "200", "dataset"));
-            using var client = ClientFactory.Create(stub);
+            using var client = ClientFactory.Create(stub, apiKey: null);
 
             GenderResponse res = await client.NameAsync("Onur", country: "TR");
 
@@ -53,7 +54,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Single_ai_alias_result_keeps_model_reported_confidence_and_negative_balance()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example(Gender, "post", "200", "alias"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample(Gender, "post", "200", "alias"));
             using var client = ClientFactory.Create(stub);
 
             GenderResponse res = await client.UsernameAsync("prenses", country: "TR", forceToGenderize: true);
@@ -75,7 +76,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Single_unknown_result_is_success_not_error()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example(Gender, "post", "200", "unknown"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample(Gender, "post", "200", "unknown"));
             using var client = ClientFactory.Create(stub);
 
             GenderResponse res = await client.NameAsync("zzzxxyy", aiMode: AiMode.Off);
@@ -95,7 +96,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Unknown_fields_are_tolerated_and_preserved()
         {
-            string json = Fixtures.WithExtraFields(Fixtures.Example(Gender, "post", "200", "dataset"));
+            string json = Fixtures.WithExtraFields(Fixtures.KeyedExample(Gender, "post", "200", "dataset"));
             var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, json);
             using var client = ClientFactory.Create(stub);
 
@@ -116,7 +117,7 @@ namespace GenderApi.Tests
                 .Replace("\"observed_frequency\"", "\"future_kind\"")
                 .Replace("\"ip_trial\"", "\"future_mode\"");
             var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, json);
-            using var client = ClientFactory.Create(stub);
+            using var client = ClientFactory.Create(stub, requireApiKeyAccess: false);
 
             GenderResponse res = await client.NameAsync("Onur");
 
@@ -127,7 +128,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Batch_partial_success_returns_result_and_exposes_failed_items()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender/batch", "post", "200", "batch"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender/batch", "post", "200", "batch"));
             using var client = ClientFactory.Create(stub);
 
             BatchResponse res = await client.GenderBatchAsync(new[]
@@ -162,7 +163,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Usage_is_parsed()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/usage", "get", "200", "usage"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/usage", "get", "200", "usage"));
             using var client = ClientFactory.Create(stub);
 
             UsageResponse res = await client.UsageAsync();
@@ -179,7 +180,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Phone_validation_is_parsed_and_body_is_exact()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/phone/validate", "post", "200", "phone"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/phone/validate", "post", "200", "phone"));
             using var client = ClientFactory.Create(stub);
 
             PhoneValidationResponse res = await client.ValidatePhoneAsync("+90 (555) 000-0000", "TR");
@@ -219,7 +220,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Headers_use_bearer_and_key_never_appears_in_url()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "dataset"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"));
             using var client = ClientFactory.Create(stub);
 
             await client.NameAsync("Onur");
@@ -239,7 +240,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Wire_fields_are_exact()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "alias"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "alias"));
             using var client = ClientFactory.Create(stub);
 
             await client.GenderAsync(GenderInputType.Username, "prenses", country: "TR", aiMode: AiMode.Fallback, forceToGenderize: true, id: "u-1");
@@ -252,7 +253,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Optional_fields_are_omitted_and_non_ascii_stays_utf8()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "dataset"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"));
             using var client = ClientFactory.Create(stub);
 
             await client.EmailAsync("müge@example.com");
@@ -263,7 +264,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Batch_body_wraps_items()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender/batch", "post", "200", "batch"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender/batch", "post", "200", "batch"));
             using var client = ClientFactory.Create(stub);
 
             await client.GenderBatchAsync(new[]
@@ -321,7 +322,7 @@ namespace GenderApi.Tests
         [Fact]
         public async Task Injected_http_client_default_headers_are_not_modified()
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "dataset"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"));
             var http = new HttpClient(stub);
             using var client = new GenderApiClient(new GenderApiClientOptions { ApiKey = ClientFactory.TestKey, HttpClient = http });
 
@@ -354,7 +355,7 @@ namespace GenderApi.Tests
         [InlineData("http://localhost:3000", "http://localhost:3000/gender")]
         public async Task Https_and_local_http_base_urls_are_accepted(string baseUrl, string expected)
         {
-            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "dataset"));
+            var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"));
             using var client = ClientFactory.Create(stub, baseUrl: baseUrl);
 
             await client.NameAsync("Onur");
@@ -380,7 +381,7 @@ namespace GenderApi.Tests
             Environment.SetEnvironmentVariable("GENDERAPI_API_KEY", "fedcba9876543210fedcba98");
             try
             {
-                var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.Example("/api/v2/gender", "post", "200", "dataset"));
+                var stub = new StubHandler().EnqueueJson(HttpStatusCode.OK, Fixtures.KeyedExample("/api/v2/gender", "post", "200", "dataset"));
                 using var client = new GenderApiClient(new GenderApiClientOptions { HttpClient = new HttpClient(stub) });
 
                 await client.NameAsync("Onur");
